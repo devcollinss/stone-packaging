@@ -27,7 +27,7 @@ jobs:
       - name: Create Alpine package
         run: |
           chmod +x ./package_alpine.sh
-          ./package_alpine.sh ${{ steps.vars.outputs.tag }}  # Pass the version tag to the packaging script
+          ./package_alpine.sh
 
       - name: Rename binaries
         run: |
