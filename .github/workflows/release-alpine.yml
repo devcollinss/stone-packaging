@@ -13,34 +13,37 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3  # Use the latest version of checkout
+        uses: actions/checkout@v3  # Ensure code is checked out
+
+      - name: Verify script existence
+        run: |
+          ls -la  # List files to verify the script is present
+          ls -la ./package_alpine.sh  # Check for package_alpine.sh specifically
 
       - name: Set up environment
         run: |
           echo "Setting up environment"
           echo "TARGET_ARCH=x86_64" >> $GITHUB_ENV  # Set the target architecture
 
-      - name: Set output
-        id: vars
-        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+      - name: Make package_alpine.sh executable
+        run: chmod +x ./package_alpine.sh  # Ensure the script is executable
 
       - name: Create Alpine package
         run: |
-          chmod +x ./package_alpine.sh
-          ./package_alpine.sh
+          ./package_alpine.sh ${{ steps.vars.outputs.tag }}  # Pass the version tag
 
       - name: Rename binaries
         run: |
           echo "Renaming binaries to include architecture"
-          mv ./build/${PACKAGE_NAME}/your_binary ./build/${PACKAGE_NAME}/your_binary-${TARGET_ARCH}  # Adjust the path and name
+          mv ./build/${{ steps.vars.outputs.tag }}/your_binary ./build/${{ steps.vars.outputs.tag }}/your_binary-${TARGET_ARCH}
 
       - name: Verify file existence
         run: |
-          ls -la ./build/${PACKAGE_NAME}/  # List files to verify output
+          ls -la ./build/${{ steps.vars.outputs.tag }}/  # List files to verify output
 
       - name: Upload files to a GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./build/${PACKAGE_NAME}/your_binary-${TARGET_ARCH}  # Upload renamed binaries
-            ./build/${PACKAGE_NAME}/*.apk  # Adjust this path to include generated APK files
+            ./build/${{ steps.vars.outputs.tag }}/your_binary-${TARGET_ARCH}  # Upload renamed binaries
+            ./build/${{ steps.vars.outputs.tag }}/*.apk  # Adjust to include APK files
