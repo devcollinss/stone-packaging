@@ -6,6 +6,9 @@ set -e
 PACKAGE_NAME="stone-prover"
 VERSION=$1  # Get the version from the argument
 
+# Ensure Alpine build tools are installed
+apk add --no-cache alpine-sdk cmake
+
 # Create a directory for the Alpine package
 mkdir -p build/${PACKAGE_NAME}
 cd build/${PACKAGE_NAME}
