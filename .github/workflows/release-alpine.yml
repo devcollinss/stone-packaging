@@ -1,39 +1,54 @@
-name: Release
+name: Release Alpine Packages
 
 on:
   push:
     tags:
-      - v*
+      - 'v*.*.*'  # Trigger on version tags
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-22.04  # Use Ubuntu for building Alpine packages
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3  # Use the latest version of checkout
 
-      - name: Install dependencies
+      - name: Set up environment
         run: |
-          sudo apt update
-          sudo apt install -y docker.io
+          echo "Setting up environment"
+          echo "TARGET_ARCH=x86_64" >> $GITHUB_ENV  # Set the target architecture
 
-      - name: Build and push Alpine package
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.tag }}
+      - name: Build
         run: |
-          docker build -t prover:latest .
-          docker tag prover:latest prover:${TAG}
-          docker push prover:${TAG}
+          chmod +x ./build.sh
+          ./build.sh  # Assuming this builds the necessary components
+
+      - name: Test
+        run: |
+          chmod +x ./test.sh
+          ./test.sh  # Assuming this runs your tests
+
+      - name: Set output
+        id: vars
+        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - name: Create Alpine package
-        env:
-          TAG: ${{ github.event.tag }}
         run: |
-          docker run --rm -v ${PWD}:/app prover:${TAG} /bin/sh -c "apk add --no-cache --virtual .build-deps alpine-sdk && mv /app/prover /app/prover-${TAG} && tar -czf prover-${TAG}.tar.gz prover-${TAG} && mv prover-${TAG}.tar.gz /app/"
+          chmod +x ./package_alpine.sh
+          ./package_alpine.sh ${{ steps.vars.outputs.tag }}  # Pass the version tag to the packaging script
 
-      - name: Upload Alpine package
-        uses: actions/upload-artifact@v4.3.0
+      - name: Rename binaries
+        run: |
+          echo "Renaming binaries to include architecture"
+          mv ./build/${PACKAGE_NAME}/your_binary ./build/${PACKAGE_NAME}/your_binary-${TARGET_ARCH}  # Adjust the path and name
+
+      - name: Verify file existence
+        run: |
+          ls -la ./build/${PACKAGE_NAME}/  # List files to verify output
+
+      - name: Upload files to a GitHub release
+        uses: softprops/action-gh-release@v2
         with:
-          name: prover-${TAG}.tar.gz
-          path: prover-${TAG}.tar.gz
+          files: |
+            ./build/${PACKAGE_NAME}/your_binary-${TARGET_ARCH}  # Upload renamed binaries
+            ./build/${PACKAGE_NAME}/*.apk  # Adjust this path to include generated APK files
