@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -33,7 +33,7 @@ jobs:
           docker run --rm -v ${PWD}:/app prover:${TAG} /bin/sh -c "apk add --no-cache --virtual .build-deps alpine-sdk && mv /app/prover /app/prover-${TAG} && tar -czf prover-${TAG}.tar.gz prover-${TAG} && mv prover-${TAG}.tar.gz /app/"
 
       - name: Upload Alpine package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4.3.0
         with:
           name: prover-${TAG}.tar.gz
           path: prover-${TAG}.tar.gz
