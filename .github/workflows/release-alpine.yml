@@ -28,21 +28,20 @@ jobs:
 
       - name: Build
         run: |
-          echo "Building for ${TARGET_ARCH} architecture"
           chmod +x ./build.sh
           ./build.sh
         env:
-            TARGET_ARCH: $TARGET_ARCH
-            BUILD_ENVIRONMENT: $BUILD_ENVIRONMEN
-        
+          TARGET_ARCH: ${{ env.TARGET_ARCH }}
+          BUILD_ENVIRONMENT: ${{ env.BUILD_ENVIRONMENT }}
+
       - name: Test
         run: |
           echo "Running tests for ${TARGET_ARCH} architecture"
           chmod +x ./test.sh
           ./test.sh
         env:
-          TARGET_ARCH: $TARGET_ARCH
-          BUILD_ENVIRONMENT: $BUILD_ENVIRONMENT
+          TARGET_ARCH: ${{ env.TARGET_ARCH }}
+          BUILD_ENVIRONMENT: ${{ env.BUILD_ENVIRONMENT }}
 
       - name: Make package_alpine.sh executable
         run: chmod +x ./package_alpine.sh
@@ -50,25 +49,24 @@ jobs:
       - name: Create Alpine package
         run: |
           echo "Creating Alpine package for ${TARGET_ARCH} architecture"
-          ./package_alpine.sh ${tag}
-          env:
-            TARGET_ARCH: x86_64
-            tag: ${steps.vars.outputs.tag}
+          ./package_alpine.sh ${{ steps.vars.outputs.tag }}
+        env:
+          TARGET_ARCH: ${{ env.TARGET_ARCH }}
 
       - name: Rename binaries
         run: |
           echo "Renaming binaries to include architecture"
-          mv ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover-${TARGET_ARCH}
-          mv ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier-${TARGET_ARCH}
+          mv ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover-${{ env.TARGET_ARCH }}
+          mv ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier-${{ env.TARGET_ARCH }}
 
       - name: Verify file existence
         run: |
-          ls -la ./build/${{ steps.vars.outputs.tag }}/ 
+          ls -la ./build/${{ steps.vars.outputs.tag }}/
 
       - name: Upload files to a GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover-${TARGET_ARCH}
-            ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier-${TARGET_ARCH}
+            ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover-${{ env.TARGET_ARCH }}
+            ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier-${{ env.TARGET_ARCH }}
             ./build/${{ steps.vars.outputs.tag }}/*.apk
