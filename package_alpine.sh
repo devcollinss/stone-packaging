@@ -2,30 +2,49 @@
 
 set -e
 
+# Ensure the TAG argument is provided
 TAG=$1
+if [ -z "$TAG" ]; then
+  echo "Error: Tag argument is required"
+  exit 1
+fi
 
-mkdir -p /tmp/stone-prover/DEBIAN
-mkdir -p /tmp/stone-prover/usr/bin
+# Install necessary Alpine packages for building
+apk add --no-cache alpine-sdk abuild
 
-cp /usr/local/bin/cpu_air_prover /tmp/stone-prover/usr/bin/
-cp /usr/local/bin/cpu_air_verifier /tmp/stone-prover/usr/bin/
+# Create a temporary directory for the package
+BUILD_DIR="/tmp/stone-prover"
+mkdir -p $BUILD_DIR/usr/bin
 
-cat <<EOF > /tmp/stone-prover/DEBIAN/control
-Package: stone-prover
-Version: $(echo $TAG | cut -c 2-)
-Architecture: all
-Depends: libdw1
-Maintainer: Baking Bad na@baking-bad.org
-Description: Stone prover deb package
+# Copy the binaries into the package directory
+cp /usr/local/bin/cpu_air_prover $BUILD_DIR/usr/bin/
+cp /usr/local/bin/cpu_air_verifier $BUILD_DIR/usr/bin/
+
+# Create the APKBUILD file
+APKBUILD_FILE="$BUILD_DIR/APKBUILD"
+cat <<EOF > $APKBUILD_FILE
+# Maintainer: Baking Bad <na@baking-bad.org>
+pkgname=stone-prover
+pkgver=$(echo $TAG | cut -c 2-)
+pkgrel=0
+arch="${TARGET_ARCH}"
+url="https://example.com" # Replace with the actual URL
+license="MIT" # Update with the correct license if different
+depends="libdw"
+
+build() {
+    # No build step needed since we're copying precompiled binaries
+    return 0
+}
+
+package() {
+    install -Dm755 usr/bin/cpu_air_prover "${pkgdir}/usr/bin/cpu_air_prover"
+    install -Dm755 usr/bin/cpu_air_verifier "${pkgdir}/usr/bin/cpu_air_verifier"
+}
 EOF
 
-dpkg-deb --build /tmp/stone-prover /tmp/stone-prover/stone-prover.deb
+# Change to the build directory
+cd $BUILD_DIR
 
-apk add --no-cache build-base
-apk add --no-cache alpine-sdk
-abuild-keygen -a -n
-abuild-tar --compression xz
-
-cd /tmp/stone-prover
-abuild -r -P cpu_air_prover-${TARGET_ARCH}.apk cpu_air_prover
-abuild -r -P cpu_air_verifier-${TARGET_ARCH}.apk cpu_air_verifier
+# Create the APK package
+abuild -r

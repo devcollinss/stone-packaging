@@ -10,57 +10,47 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Set up environment variables
       - name: Set up environment
         run: |
           echo "TARGET_ARCH=x86_64" >> $GITHUB_ENV
           echo "BUILD_ENVIRONMENT=production" >> $GITHUB_ENV
 
-      # Step 3: Build the prover binary
       - name: Build prover
         run: |
           chmod +x ./build.sh
           ./build.sh
 
-      # Step 4: Test the prover binary
       - name: Run tests
         run: |
           chmod +x ./test.sh
           ./test.sh
 
-      # Step 5: Set output variable for the Git tag
       - name: Set output for tag
         id: vars
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      # Step 6: Make package_alpine.sh executable
       - name: Make package script executable
         run: |
           chmod +x ./package_alpine.sh
 
-      # Step 7: Create Alpine package
       - name: Package Alpine
         run: |
           ./package_alpine.sh ${{ steps.vars.outputs.tag }}
 
-      # Step 8: Rename binaries for Alpine
       - name: Rename binaries
         run: |
           echo "Renaming binaries to include architecture"
           mv /tmp/stone-prover/build/bazelbin/src/starkware/main/cpu/cpu_air_prover ./cpu_air_prover-${TARGET_ARCH}
           mv /tmp/stone-prover/build/bazelbin/src/starkware/main/cpu/cpu_air_verifier ./cpu_air_verifier-${TARGET_ARCH}
 
-      # Step 9: Verify that the files were created
       - name: Verify file existence
         run: |
           ls -la ./
           ls -la /tmp/stone-prover/
 
-      # Step 10: Upload files to GitHub release
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
