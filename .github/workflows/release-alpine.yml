@@ -14,6 +14,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          repository: baking-bad/stone-prover
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: stone-prover
 
       - name: Verify script existence
         run: |
