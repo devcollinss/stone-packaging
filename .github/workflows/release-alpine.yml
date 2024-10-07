@@ -13,42 +13,42 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3  # Ensure code is checked out
+        uses: actions/checkout@v3
 
       - name: Verify script existence
         run: |
-          ls -la  # List files to verify the script is present
-          ls -la ./package_alpine.sh  # Check for package_alpine.sh specifically
+          ls -la
+          ls -la ./package_alpine.sh
 
       - name: Set up environment
         run: |
           echo "Setting up environment"
-          echo "TARGET_ARCH=x86_64" >> $GITHUB_ENV  # Set the target architecture
+          echo "TARGET_ARCH=x86_64" >> $GITHUB_ENV
 
       - name: Make package_alpine.sh executable
-        run: chmod +x ./package_alpine.sh  # Ensure the script is executable
+        run: chmod +x ./package_alpine.sh
 
       - name: Create Alpine package
         run: |
-          chmod +x ./package_alpine.sh
           ./package_alpine.sh ${tag}
           env:
             TARGET_ARCH: x86_64
             tag: ${steps.vars.outputs.tag}
 
-
       - name: Rename binaries
         run: |
           echo "Renaming binaries to include architecture"
-          mv ./build/${{ steps.vars.outputs.tag }}/your_binary ./build/${{ steps.vars.outputs.tag }}/your_binary-${TARGET_ARCH}
+          mv ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover-${TARGET_ARCH}
+          mv ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier-${TARGET_ARCH}
 
       - name: Verify file existence
         run: |
-          ls -la ./build/${{ steps.vars.outputs.tag }}/  # List files to verify output
+          ls -la ./build/${{ steps.vars.outputs.tag }}/ 
 
       - name: Upload files to a GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./build/${{ steps.vars.outputs.tag }}/your_binary-${TARGET_ARCH}  # Upload renamed binaries
-            ./build/${{ steps.vars.outputs.tag }}/*.apk  # Adjust to include APK files
+            ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover-${TARGET_ARCH}
+            ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier-${TARGET_ARCH}
+            ./build/${{ steps.vars.outputs.tag }}/*.apk
