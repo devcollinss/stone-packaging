@@ -27,6 +27,16 @@ jobs:
           echo "Setting up environment"
           echo "TARGET_ARCH=x86_64" >> $GITHUB_ENV
 
+      - name: Build
+        run: |
+          chmod +x ./build.sh
+          ./build.sh
+        
+      - name: Test
+        run: |
+          chmod +x ./test.sh
+          ./test.sh
+
       - name: Make package_alpine.sh executable
         run: chmod +x ./package_alpine.sh
 
