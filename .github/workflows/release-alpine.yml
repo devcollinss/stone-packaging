@@ -22,7 +22,7 @@ jobs:
       - name: Checkout packaging code
         uses: actions/checkout@v3
         with:
-          repository: baking-bad/stone-packaging
+          repository: dipdup-io/stone-packaging
           token: ${{ secrets.GITHUB_TOKEN }}
           path: stone-packaging
 
