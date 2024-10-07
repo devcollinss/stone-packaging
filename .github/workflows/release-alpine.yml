@@ -29,7 +29,7 @@ jobs:
       - name: Verify script existence
         run: |
           ls -la
-          ls -la ./stone-packaging/package_alpine.sh
+          ls -la ./package_alpine.sh
 
       - name: Set up environment
         run: |
