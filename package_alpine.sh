@@ -7,8 +7,8 @@ TAG=$1
 mkdir -p /tmp/stone-prover/DEBIAN
 mkdir -p /tmp/stone-prover/usr/bin
 
-cp /tmp/stone-prover/cpu_air_prover /tmp/stone-prover/usr/bin/
-cp /tmp/stone-prover/cpu_air_verifier /tmp/stone-prover/usr/bin/
+cp /usr/local/bin/cpu_air_prover /tmp/stone-prover/usr/bin/
+cp /usr/local/bin/cpu_air_verifier /tmp/stone-prover/usr/bin/
 
 cat <<EOF > /tmp/stone-prover/DEBIAN/control
 Package: stone-prover
