@@ -19,10 +19,17 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: stone-prover
 
+      - name: Checkout packaging code
+        uses: actions/checkout@v3
+        with:
+          repository: baking-bad/stone-packaging
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: stone-packaging
+
       - name: Verify script existence
         run: |
           ls -la
-          ls -la ./package_alpine.sh
+          ls -la ./stone-packaging/package_alpine.sh
 
       - name: Set up environment
         run: |
@@ -30,11 +37,11 @@ jobs:
           echo "TARGET_ARCH=x86_64" >> $GITHUB_ENV
 
       - name: Make package_alpine.sh executable
-        run: chmod +x ./package_alpine.sh
+        run: chmod +x ./stone-packaging/package_alpine.sh
 
       - name: Create Alpine package
         run: |
-          ./package_alpine.sh ${tag}
+          ./stone-packaging/package_alpine.sh ${tag}
           env:
             TARGET_ARCH: x86_64
             tag: ${steps.vars.outputs.tag}
