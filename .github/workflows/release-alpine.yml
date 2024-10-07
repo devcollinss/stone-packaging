@@ -19,29 +19,16 @@ jobs:
         run: |
           echo "Configuring environment variables"
           echo "TARGET_ARCH=x86_64" >> $GITHUB_ENV
-          echo "BUILD_ENVIRONMENT=production" >> $GITHUB_ENV
-          echo "BUILD_DATE=$(date +"%Y-%m-%d")" >> $GITHUB_ENV
-          echo "BUILD_TIME=$(date +"%H:%M:%S")" >> $GITHUB_ENV
-        env:
-          TARGET_ARCH: x86_64
-          BUILD_ENVIRONMENT: production
 
       - name: Build
         run: |
           chmod +x ./build.sh
           ./build.sh
-        env:
-          TARGET_ARCH: ${{ env.TARGET_ARCH }}
-          BUILD_ENVIRONMENT: ${{ env.BUILD_ENVIRONMENT }}
 
       - name: Test
         run: |
-          echo "Running tests for ${TARGET_ARCH} architecture"
           chmod +x ./test.sh
           ./test.sh
-        env:
-          TARGET_ARCH: ${{ env.TARGET_ARCH }}
-          BUILD_ENVIRONMENT: ${{ env.BUILD_ENVIRONMENT }}
 
       - name: Make package_alpine.sh executable
         run: chmod +x ./package_alpine.sh
