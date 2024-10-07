@@ -30,7 +30,12 @@ jobs:
 
       - name: Create Alpine package
         run: |
-          ./package_alpine.sh ${{ steps.vars.outputs.tag }}  # Pass the version tag
+          chmod +x ./package_alpine.sh
+          ./package_alpine.sh ${tag}
+          env:
+            TARGET_ARCH: x86_64
+            tag: ${steps.vars.outputs.tag}
+
 
       - name: Rename binaries
         run: |
