@@ -1,4 +1,4 @@
-name: Release Alpine Packages
+name: release
 
 on:
   push:
@@ -7,53 +7,68 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    container:
-      image: alpine:latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-14]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Setup environment
-        run: |
-          echo "Configuring environment variables"
+    - name: Set up environment
+      run: |
+        echo "Setting up environment for ${{ matrix.os }}"
+        if [ "${{ matrix.os }}" == "ubuntu-22.04" ]; then
           echo "TARGET_ARCH=x86_64" >> $GITHUB_ENV
+        elif [ "${{ matrix.os }}" == "macos-14" ]; then
+          echo "TARGET_ARCH=arm64" >> $GITHUB_ENV
+        fi
 
-      - name: Build
-        run: |
-          chmod +x ./build.sh
-          ./build.sh
+    - name: Build
+      run: |
+        chmod +x ./build.sh
+        ./build.sh
+    
+    - name: Test
+      run: |
+        chmod +x ./test.sh
+        ./test.sh
 
-      - name: Test
-        run: |
-          chmod +x ./test.sh
-          ./test.sh
+    - name: Set output
+      id: vars
+      run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
-      - name: Make package_alpine.sh executable
-        run: chmod +x ./package_alpine.sh
+    - name: Extract files and build DEB package
+      if: matrix.os == 'ubuntu-22.04'
+      run: |
+        chmod +x ./package_deb.sh
+        ./package_deb.sh ${{ steps.vars.outputs.tag }}
 
-      - name: Create Alpine package
-        run: |
-          echo "Creating Alpine package for ${TARGET_ARCH} architecture"
-          ./package_alpine.sh ${{ steps.vars.outputs.tag }}
-        env:
-          TARGET_ARCH: ${{ env.TARGET_ARCH }}
+    - name: Rename binaries for Ubuntu
+      if: matrix.os == 'ubuntu-22.04'
+      run: |
+        echo "Renaming binaries to include architecture"
+        mv /tmp/stone-prover/build/bazelbin/src/starkware/main/cpu/cpu_air_prover ./cpu_air_prover-${{ env.TARGET_ARCH }}
+        mv /tmp/stone-prover/build/bazelbin/src/starkware/main/cpu/cpu_air_verifier ./cpu_air_verifier-${{ env.TARGET_ARCH }}
+        mv /tmp/stone-prover/stone-prover.deb /tmp/stone-prover/stone-prover-linux-${{ env.TARGET_ARCH }}.deb
 
-      - name: Rename binaries
-        run: |
-          echo "Renaming binaries to include architecture"
-          mv ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover-${{ env.TARGET_ARCH }}
-          mv ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier-${{ env.TARGET_ARCH }}
+    - name: Rename binaries for macOS
+      if: matrix.os == 'macos-14'
+      run: |
+        echo "Renaming binaries to include architecture"
+        mv /tmp/stone-prover/build/bazelbin/src/starkware/main/cpu/cpu_air_prover ./cpu_air_prover-${{ env.TARGET_ARCH }}
+        mv /tmp/stone-prover/build/bazelbin/src/starkware/main/cpu/cpu_air_verifier ./cpu_air_verifier-${{ env.TARGET_ARCH }}
 
-      - name: Verify file existence
-        run: |
-          ls -la ./build/${{ steps.vars.outputs.tag }}/
+    - name: Verify file existence
+      run: |
+        ls -la ./
+        ls -la /tmp/stone-prover/
 
-      - name: Upload files to a GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ./build/${{ steps.vars.outputs.tag }}/cpu_air_prover-${{ env.TARGET_ARCH }}
-            ./build/${{ steps.vars.outputs.tag }}/cpu_air_verifier-${{ env.TARGET_ARCH }}
-            ./build/${{ steps.vars.outputs.tag }}/*.apk
+    - name: Upload files to a GitHub release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+         ./cpu_air*
+         /tmp/stone-prover/*.deb
