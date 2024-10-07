@@ -14,34 +14,42 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          repository: baking-bad/stone-prover
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: stone-prover
 
-      - name: Checkout packaging code
-        uses: actions/checkout@v3
-
-      - name: Set up environment
+      - name: Setup environment
         run: |
-          echo "Setting up environment"
+          echo "Configuring environment variables"
           echo "TARGET_ARCH=x86_64" >> $GITHUB_ENV
+          echo "BUILD_ENVIRONMENT=production" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date +"%Y-%m-%d")" >> $GITHUB_ENV
+          echo "BUILD_TIME=$(date +"%H:%M:%S")" >> $GITHUB_ENV
+        env:
+          TARGET_ARCH: x86_64
+          BUILD_ENVIRONMENT: production
 
       - name: Build
         run: |
+          echo "Building for ${TARGET_ARCH} architecture"
           chmod +x ./build.sh
           ./build.sh
+        env:
+            TARGET_ARCH: $TARGET_ARCH
+            BUILD_ENVIRONMENT: $BUILD_ENVIRONMEN
         
       - name: Test
         run: |
+          echo "Running tests for ${TARGET_ARCH} architecture"
           chmod +x ./test.sh
           ./test.sh
+        env:
+          TARGET_ARCH: $TARGET_ARCH
+          BUILD_ENVIRONMENT: $BUILD_ENVIRONMENT
 
       - name: Make package_alpine.sh executable
         run: chmod +x ./package_alpine.sh
 
       - name: Create Alpine package
         run: |
+          echo "Creating Alpine package for ${TARGET_ARCH} architecture"
           ./package_alpine.sh ${tag}
           env:
             TARGET_ARCH: x86_64
