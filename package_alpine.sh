@@ -13,8 +13,8 @@ BUILD_DIR="/tmp/stone-prover"
 mkdir -p $BUILD_DIR/usr/bin
 
 # Copy the binaries into the package directory
-cp /work/cpu_air_prover $BUILD_DIR/usr/bin/
-cp /work/cpu_air_verifier $BUILD_DIR/usr/bin/
+cp /usr/local/bin/cpu_air_prover /tmp/stone-prover/usr/bin/
+cp /usr/local/bin/cpu_air_verifier /tmp/stone-prover/usr/bin/
 
 # Create the APKBUILD file
 APKBUILD_FILE="$BUILD_DIR/APKBUILD"
