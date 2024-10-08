@@ -41,6 +41,3 @@ cd $BUILD_DIR
 
 # Build the package
 abuild -r
-
-# Move the package to the mounted directory
-mv /home/builder/packages/work/*/*.apk /work/
